@@ -21,9 +21,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<dynamic>> _futureProducts;
   late Future<List<dynamic>> _futureCategories;
-  final searchCtrl = TextEditingController();
+  List<dynamic> _allProducts = [];
+  
   int? selectedCategoryId;
   String currentCategoryName = 'Tất cả';
+  String? _sortBy = 'newest';
 
   late PageController _bannerController;
   int _currentBannerIndex = 0;
@@ -44,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startBannerTimer() {
-    _bannerTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    _bannerTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
       if (_bannerController.hasClients) {
         int nextIndex = (_currentBannerIndex + 1) % _bannerImages.length;
         _bannerController.animateToPage(
@@ -60,127 +62,28 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _bannerTimer?.cancel();
     _bannerController.dispose();
-    searchCtrl.dispose();
     super.dispose();
   }
 
-  void _loadData() {
+  void _loadData({String query = ''}) {
     setState(() {
       _futureCategories = ApiService.getCategories();
       _futureProducts = ApiService.getProducts(
-        query: searchCtrl.text.trim(),
+        query: query,
         categoryId: selectedCategoryId,
+        sortBy: _sortBy,
       );
     });
+    _loadAllProductsForSuggestion();
   }
 
-  // HÀM LẤY ICON THEO TÊN DANH MỤC
-  IconData _getCategoryIcon(String name) {
-    String lower = name.toLowerCase();
-    if (lower.contains('áo')) return Icons.checkroom;
-    if (lower.contains('quần')) return Icons.dry_cleaning;
-    if (lower.contains('váy') || lower.contains('đầm')) return Icons.woman;
-    if (lower.contains('phụ kiện') || lower.contains('túi') || lower.contains('kính') || lower.contains('mũ')) {
-      return Icons.watch; // Icon cho Phụ kiện
+  Future<void> _loadAllProductsForSuggestion() async {
+    var allProd = await ApiService.getProducts();
+    if (mounted) {
+      setState(() {
+        _allProducts = allProd;
+      });
     }
-    return Icons.category;
-  }
-
-  // Hàm hiển thị bảng chọn danh mục (Bottom Sheet nâng cấp)
-  void _showCategoryBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-builder: (context) {
-        return FutureBuilder<List<dynamic>>(
-          future: _futureCategories,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const SizedBox(
-                height: 200,
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            final categories = snapshot.data!;
-
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Chọn Danh Mục',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      // Nút "Tất cả"
-                      ChoiceChip(
-                        avatar: Icon(
-                          Icons.grid_view,
-                          color: selectedCategoryId == null ? const Color(0xFF0A192F) : Colors.grey,
-                          size: 18,
-                        ),
-                        label: const Text('Tất cả'),
-                        selected: selectedCategoryId == null,
-                        selectedColor: const Color(0xFF00E5FF),
-                        labelStyle: TextStyle(
-                          color: selectedCategoryId == null ? const Color(0xFF0A192F) : null,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        onSelected: (val) {
-                          setState(() {
-                            selectedCategoryId = null;
-                            currentCategoryName = 'Tất cả';
-                          });
-                          _loadData();
-                          Navigator.pop(context);
-                        },
-                      ),
-                      // Các danh mục khác
-                      ...categories.map((cat) {
-                        bool isSelected = selectedCategoryId == cat['Id'];
-                        String catName = cat['TenDanhMuc'] ?? '';
-                        return ChoiceChip(
-                          avatar: Icon(
-                            _getCategoryIcon(catName),
-                            color: isSelected ? const Color(0xFF0A192F) : Colors.grey,
-                            size: 18,
-                          ),
-                          label: Text(catName),
-                          selected: isSelected,
-                          selectedColor: const Color(0xFF00E5FF),
-                          labelStyle: TextStyle(
-                            color: isSelected ? const Color(0xFF0A192F) : null,
-                            fontWeight: FontWeight.bold,
-                          ),
-onSelected: (val) {
-                            setState(() {
-                              selectedCategoryId = cat['Id'];
-                              currentCategoryName = catName;
-                            });
-                            _loadData();
-                            Navigator.pop(context);
-                          },
-                        );
-                      }).toList(),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   @override
@@ -188,22 +91,21 @@ onSelected: (val) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: false,
-        backgroundColor: const Color(0xFF0F131C),
-        elevation: 0,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // ĐÃ ĐƯA LOGO TRỞ LẠI
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: Image.asset(
-                'assets/images/logo.png',
-                width: 30,
-                height: 30,
+                'assets/images/logo2.jpg',
+                width: 36,
+                height: 36,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    width: 30,
-                    height: 30,
+                    width: 36,
+                    height: 36,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
@@ -211,10 +113,10 @@ onSelected: (val) {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Text(
-                      'SM',
+                      'SV',
                       style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.w900,
@@ -226,24 +128,18 @@ onSelected: (val) {
               ),
             ),
             const SizedBox(width: 10),
-            const Text(
-              'SHAMIKIN SHOP',
+            Text(
+              'SHAVIK SHOP',
               style: TextStyle(
-                color: Color(0xFF00E5FF),
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.2,
-                fontSize: 16,
+                fontSize: 18,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
               ),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.menu, color: Color(0xFF00E5FF), size: 28),
-            tooltip: 'Chọn danh mục',
-            onPressed: _showCategoryBottomSheet,
-          ),
-        ],
+        // ĐÃ BỎ 2 ICON CHUÔNG VÀ TÚI XÁCH
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -255,42 +151,110 @@ onSelected: (val) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-// --- 1. THANH TÌM KIẾM ---
+                  // THANH TÌM KIẾM
                   Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: TextField(
-                      controller: searchCtrl,
-                      decoration: InputDecoration(
-                        hintText: 'Tìm kiếm sản phẩm quần áo...',
-                        prefixIcon: const Icon(Icons.search, color: Color(0xFF00E5FF)),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            searchCtrl.clear();
-                            _loadData();
-                          },
-                        ),
-                        filled: true,
-                        fillColor: Theme.of(context).cardColor,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onSubmitted: (_) => _loadData(),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                    child: Autocomplete<Object>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<Object>.empty();
+                        }
+                        return _allProducts
+                            .where((product) {
+                              String name = (product['TenSanPham'] ?? '').toString().toLowerCase();
+                              return name.contains(textEditingValue.text.toLowerCase());
+                            })
+                            .map((e) => e as Object)
+                            .toList();
+                      },
+                      displayStringForOption: (Object option) {
+                        final map = option as Map<String, dynamic>;
+                        return map['TenSanPham'] ?? '';
+                      },
+                      onSelected: (Object selection) {
+                        final map = selection as Map<String, dynamic>;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductDetailScreen(
+                              productId: map['Id'],
+                              currentUser: widget.currentUser,
+                            ),
+                          ),
+                        );
+                      },
+                      fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+                        return TextField(
+                          controller: textEditingController,
+                          focusNode: focusNode,
+                          decoration: const InputDecoration(
+                            hintText: 'Tìm kiếm sản phẩm...',
+                            prefixIcon: Icon(Icons.search),
+                            contentPadding: EdgeInsets.symmetric(vertical: 0),
+                          ),
+                          onSubmitted: (val) => _loadData(query: val),
+                        );
+                      },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 8,
+                            borderRadius: BorderRadius.circular(16),
+                            color: Theme.of(context).cardColor,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                maxHeight: 250,
+                                maxWidth: MediaQuery.of(context).size.width - 32,
+                              ),
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                itemCount: options.length,
+                                itemBuilder: (context, index) {
+                                  final map = options.elementAt(index) as Map<String, dynamic>;
+                                  return ListTile(
+                                    leading: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        map['HinhAnh'] ?? '',
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (a, b, c) => const Icon(Icons.image),
+                                      ),
+                                    ),
+                                    title: Text(
+                                      map['TenSanPham'] ?? '',
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    trailing: Text(
+                                      formatPrice(map['Gia']),
+                                      style: const TextStyle(
+                                        color: Colors.redAccent,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    onTap: () => onSelected(options.elementAt(index)),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
 
-                  // --- 2. BANNER CHẠY TỰ ĐỘNG ---
+                  // ĐÃ ĐƯA BANNER TRƯỢT TRỞ LẠI
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Column(
                       children: [
                         SizedBox(
-                          height: 160,
+                          height: 170,
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(20),
                             child: PageView.builder(
                               controller: _bannerController,
                               scrollDirection: Axis.horizontal,
@@ -305,8 +269,8 @@ onSelected: (val) {
                                   fit: BoxFit.cover,
                                   width: double.infinity,
                                   errorBuilder: (a, b, c) => Container(
-                                    color: const Color(0xFF151922),
-                                    child: const Icon(Icons.image, size: 60, color: Colors.grey),
+                                    color: Colors.grey[800],
+                                    child: const Icon(Icons.image, size: 60),
                                   ),
                                 );
                               },
@@ -316,26 +280,17 @@ onSelected: (val) {
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
-children: List.generate(_bannerImages.length, (index) {
-                            return GestureDetector(
-                              onTap: () {
-                                _bannerController.animateToPage(
-                                  index,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 300),
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
-                                width: _currentBannerIndex == index ? 22 : 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: _currentBannerIndex == index
-                                      ? const Color(0xFF00E5FF)
-                                      : Colors.grey.withOpacity(0.4),
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
+                          children: List.generate(_bannerImages.length, (index) {
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              width: _currentBannerIndex == index ? 24 : 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: _currentBannerIndex == index
+                                    ? const Color(0xFF1E293B)
+                                    : Colors.grey.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(4),
                               ),
                             );
                           }),
@@ -343,37 +298,79 @@ children: List.generate(_bannerImages.length, (index) {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 20),
 
-                  const SizedBox(height: 16),
+                  // DANH MỤC
+                  FutureBuilder<List<dynamic>>(
+                    future: _futureCategories,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) return const SizedBox();
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: snapshot.data!.map((cat) {
+                            String catName = cat['TenDanhMuc'] ?? '';
+                            int catId = cat['Id'];
+                            bool isSelected = selectedCategoryId == catId;
+                            return _buildCategoryCircle(
+                              _getCategoryIcon(catName),
+                              catName,
+                              () {
+                                setState(() {
+                                  if (isSelected) {
+                                    selectedCategoryId = null;
+                                    currentCategoryName = 'Tất cả';
+                                  } else {
+                                    selectedCategoryId = catId;
+                                    currentCategoryName = catName;
+                                  }
+                                });
+                                _loadData();
+                              },
+                              isSelected: isSelected,
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
 
-                  // --- 3. TIÊU ĐỀ SẢN PHẨM ---
+                  // TIÊU ĐỀ SẢN PHẨM
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          currentCategoryName == 'Tất cả' 
-                              ? 'Sản Phẩm Mới Nhất' 
-                              : 'Danh mục: $currentCategoryName',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        GestureDetector(
-                          onTap: _showCategoryBottomSheet,
-                          child: const Text(
-                            'Lọc danh mục >',
-                            style: TextStyle(color: Color(0xFF00E5FF), fontSize: 12),
+                          'Sản phẩm: $currentCategoryName 🔥',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
+                        ),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.filter_list, size: 20),
+                          onSelected: (val) {
+                            setState(() => _sortBy = val);
+                            _loadData();
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(value: 'newest', child: Text('Mới nhất')),
+                            const PopupMenuItem(value: 'price_asc', child: Text('Giá thấp - cao')),
+                            const PopupMenuItem(value: 'price_desc', child: Text('Giá cao - thấp')),
+                            const PopupMenuItem(value: 'best_seller', child: Text('Bán chạy nhất')),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 8),
                 ],
               ),
             ),
 
-            // --- 4. DANH SÁCH SẢN PHẨM ---
+            // DANH SÁCH SẢN PHẨM
             FutureBuilder<List<dynamic>>(
               future: _futureProducts,
               builder: (context, snapshot) {
@@ -381,7 +378,7 @@ children: List.generate(_bannerImages.length, (index) {
                   return const SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.all(40),
-child: Center(child: CircularProgressIndicator()),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                   );
                 }
@@ -391,8 +388,7 @@ child: Center(child: CircularProgressIndicator()),
                       padding: EdgeInsets.all(40),
                       child: Center(
                         child: Text(
-                          'Không tìm thấy sản phẩm nào.\n(Kéo xuống để tải lại)',
-                          textAlign: TextAlign.center,
+                          'Không tìm thấy sản phẩm nào.',
                           style: TextStyle(color: Colors.grey),
                         ),
                       ),
@@ -402,11 +398,11 @@ child: Center(child: CircularProgressIndicator()),
 
                 final products = snapshot.data!;
                 return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      childAspectRatio: 0.72,
+                      childAspectRatio: 0.6,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
@@ -425,39 +421,112 @@ child: Center(child: CircularProgressIndicator()),
                               ),
                             );
                           },
-                          child: Card(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            clipBehavior: Clip.antiAlias,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Expanded(
-                                  child: Image.network(
-                                    p['HinhAnh'] ?? '',
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (a, b, c) => Container(
-                                      color: Colors.grey[800],
-                                      child: const Icon(Icons.image, size: 50, color: Colors.grey),
-                                    ),
+                                  child: Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: const BorderRadius.vertical(
+                                          top: Radius.circular(16),
+                                        ),
+                                        child: Image.network(
+                                          p['HinhAnh'] ?? '',
+                                          width: double.infinity,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (a, b, c) => Container(
+                                            color: Colors.grey[800],
+                                            child: const Icon(Icons.image),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(6),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).cardColor,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.favorite_border,
+                                            size: 16,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.all(10.0),
-child: Column(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         p['TenSanPham'] ?? '',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                        maxLines: 1,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                        maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 4),
-                                      Text(
-                                        formatPrice(p['Gia']),
-                                        style: const TextStyle(
-                                            color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 14),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            formatPrice(p['Gia']),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w900,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Text(
+                                              formatPrice((double.tryParse(p['Gia'].toString()) ?? 0) * 1.2),
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                color: Colors.grey,
+                                                decoration: TextDecoration.lineThrough,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.star,
+                                            color: Colors.amber,
+                                            size: 12,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${(p['DiemDanhGia'] ?? 0).toStringAsFixed(1)} (${p['SoLuongDanhGia'] ?? 0})',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -476,6 +545,61 @@ child: Column(
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
           ],
         ),
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String name) {
+    String lower = name.toLowerCase();
+    if (lower.contains('áo')) return Icons.checkroom;
+    if (lower.contains('quần')) return Icons.dry_cleaning;
+    if (lower.contains('váy') || lower.contains('đầm')) return Icons.woman;
+    if (lower.contains('phụ kiện') || lower.contains('túi') || lower.contains('kính')) {
+      return Icons.watch;
+    }
+    return Icons.category;
+  }
+
+  Widget _buildCategoryCircle(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    bool isSelected = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF1E293B) : Theme.of(context).cardColor,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: Icon(
+              icon,
+              color: isSelected ? Colors.white : const Color(0xFF1E293B),
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: isSelected ? const Color(0xFF1E293B) : const Color(0xFF64748B),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }

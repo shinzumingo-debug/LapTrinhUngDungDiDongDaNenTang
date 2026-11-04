@@ -12,6 +12,90 @@ class ApiService {
       return 'http://localhost:3000/api';
     }
   }
+
+  // =========================================================================
+  // TÀI KHOẢN & XÁC THỰC (OTP)
+  // =========================================================================
+  
+  // Đăng nhập
+  static Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+      return jsonDecode(res.body);
+    } catch (e) {
+      return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
+    }
+  }
+
+  // Gửi yêu cầu đăng ký (Lấy OTP)
+  static Future<Map<String, dynamic>> requestRegisterOTP(String fullName, String email, String password, String phone) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/register-request-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'fullName': fullName,
+          'email': email,
+          'password': password,
+          'phone': phone,
+        }),
+      );
+      return jsonDecode(res.body);
+    } catch (e) {
+      return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
+    }
+  }
+
+  // Xác nhận OTP đăng ký
+  static Future<Map<String, dynamic>> verifyRegisterOTP(String email, String otp) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/register-verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'otp': otp}),
+      );
+      return jsonDecode(res.body);
+    } catch (e) {
+      return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
+    }
+  }
+
+  // Gửi yêu cầu quên mật khẩu (Lấy OTP)
+  static Future<Map<String, dynamic>> requestForgotPasswordOTP(String email) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+      return jsonDecode(res.body);
+    } catch (e) {
+      return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
+    }
+  }
+
+  // Xác nhận OTP và đổi mật khẩu
+  static Future<Map<String, dynamic>> resetPasswordWithOTP(String email, String otp, String newPassword) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/reset-password-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'otp': otp, 'newPassword': newPassword}),
+      );
+      return jsonDecode(res.body);
+    } catch (e) {
+      return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
+    }
+  }
+
+  // =========================================================================
+  // CÁC HÀM KHÁC (Giữ nguyên)
+  // =========================================================================
+
   // Lấy tin nhắn chat
   static Future<List<dynamic>> getChatMessages(int userId) async {
     try {
@@ -32,6 +116,7 @@ class ApiService {
       return res.statusCode == 200;
     } catch (e) { return false; }
   }
+  
   // Khách yêu cầu hoàn đơn
   static Future<Map<String, dynamic>> requestReturn(int orderId, int userId, String reason) async {
     try {
@@ -62,6 +147,7 @@ class ApiService {
       return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
     }
   }
+  
   // Khóa / Mở khóa tài khoản khách hàng
   static Future<Map<String, dynamic>> toggleCustomerStatus(int adminId, int customerId) async {
     try {
@@ -73,9 +159,18 @@ class ApiService {
     } catch (e) {
       return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
     }
-    
   }
   
+  // Lấy danh sách mã giảm giá đang có sẵn cho khách
+  static Future<List<dynamic>> getAvailablePromotions() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/promotions/available'));
+      if (res.statusCode == 200) return jsonDecode(res.body);
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 
   // =========================================================================
   // 10. ĐÁNH GIÁ SẢN PHẨM
@@ -117,7 +212,8 @@ class ApiService {
       return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
     }
   }
-// =========================================================================
+
+  // =========================================================================
   // 9. LẤY DANH SÁCH TỒN KHO
   // =========================================================================
   static Future<List<dynamic>> getAdminInventory(int adminId) async {
@@ -150,40 +246,6 @@ class ApiService {
   }
 
   // =========================================================================
-  // 1. TÀI KHOẢN
-  // =========================================================================
-  static Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final res = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
-      return jsonDecode(res.body);
-    } catch (e) {
-      return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
-    }
-  }
-
-  static Future<Map<String, dynamic>> register(String fullName, String email, String password, String phone) async {
-    try {
-      final res = await http.post(
-        Uri.parse('$baseUrl/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'fullName': fullName,
-          'email': email,
-          'password': password,
-          'phone': phone,
-        }),
-      );
-      return jsonDecode(res.body);
-    } catch (e) {
-      return {'status': 'error', 'message': 'Lỗi kết nối Server!'};
-    }
-  }
-
-  // =========================================================================
   // 2. SẢN PHẨM & DANH MỤC
   // =========================================================================
   static Future<List<dynamic>> getCategories() async {
@@ -196,10 +258,11 @@ class ApiService {
     }
   }
 
-  static Future<List<dynamic>> getProducts({String query = '', int? categoryId}) async {
+   static Future<List<dynamic>> getProducts({String query = '', int? categoryId, String? sortBy}) async {
     try {
       String url = '$baseUrl/products?query=$query';
       if (categoryId != null) url += '&categoryId=$categoryId';
+      if (sortBy != null) url += '&sortBy=$sortBy'; // Thêm dòng này
       final res = await http.get(Uri.parse(url));
       if (res.statusCode == 200) return jsonDecode(res.body);
       return [];
@@ -231,8 +294,7 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> addToCart(
-      int userId, int variantId, int quantity) async {
+  static Future<Map<String, dynamic>> addToCart(int userId, int variantId, int quantity) async {
     try {
       final res = await http.post(
         Uri.parse('$baseUrl/cart'),
@@ -328,7 +390,7 @@ class ApiService {
     }
   }
 
-  static Future<bool> addPromotion(int adminId, String code, int percent, int limit, String description) async {
+  static Future<bool> addPromotion(int adminId, String code, int percent, int limit, String description, {int loaiGiamGia = 1}) async {
     try {
       final res = await http.post(
         Uri.parse('$baseUrl/admin/promotions'),
@@ -341,6 +403,7 @@ class ApiService {
           'percent': percent,
           'limit': limit,
           'description': description,
+          'loaiGiamGia': loaiGiamGia,
         }),
       );
       return res.statusCode == 200;
@@ -456,7 +519,7 @@ class ApiService {
     }
   }
 
-  // THÊM MỚI: Xóa khách hàng
+  // Xóa khách hàng
   static Future<bool> deleteCustomer(int adminId, int customerId) async {
     try {
       final res = await http.delete(
@@ -469,10 +532,34 @@ class ApiService {
     }
   }
 
-  static Future<bool> addProduct(int adminId, String name, int categoryId, double price, String image, String description) async {
+  static Future<bool> addProduct(int adminId, String name, int categoryId, double price, String image, String description, {List<dynamic>? images}) async {
     try {
       final res = await http.post(
         Uri.parse('$baseUrl/admin/products'),
+        headers: {
+          'Content-Type': 'application/json',
+          'admin-id': adminId.toString(),
+        },
+        body: jsonEncode({
+          'name': name,
+          'categoryId': categoryId,
+          'price': price,
+          'image': image,
+          'description': description,
+          'images': images ?? [],
+        }),
+      );
+      return res.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // SỬA SẢN PHẨM
+  static Future<bool> updateProduct(int adminId, int productId, String name, int categoryId, double price, String image, String description) async {
+    try {
+      final res = await http.put(
+        Uri.parse('$baseUrl/admin/products/$productId'),
         headers: {
           'Content-Type': 'application/json',
           'admin-id': adminId.toString(),

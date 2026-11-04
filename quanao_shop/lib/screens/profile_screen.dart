@@ -66,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       for (var o in orders) {
         String st = o['TrangThai'] ?? '';
-        if (st == 'ChoXacNhan' || st == 'DaXacNhan') {
+        if (st == 'ChoXacNhan' || st == 'DaXacNhan' || st == 'DangLayHang') {
           choXacNhan++;
         } else if (st == 'DangGiao') {
           dangGiao++;
@@ -85,9 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           countDaHuy = daHuy;
         });
       }
-    } catch (e) {
-      // Bỏ qua lỗi kết nối
-    }
+    } catch (e) {}
   }
 
   void _openOrderTracking(int initialTab) {
@@ -137,98 +135,155 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String role = isLoggedIn ? (user['VaiTro'] ?? 'KhachHang').toString().trim().toLowerCase() : '';
     bool isAdmin = role == 'admin';
 
+    final cardColor = Theme.of(context).cardColor;
+    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    final subTextColor = Colors.grey;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TÀI KHOẢN CỦA TÔI'),
+        title: const Text(
+          'Tài khoản',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: const Color(0xFF00E5FF),
-                      child: Text(
-                        isLoggedIn ? (user['HoTen'] ?? 'U')[0].toUpperCase() : '?',
-                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF0A192F)),
+            // KHỐI THÔNG TIN CÁ NHÂN
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: const Color(0xFF1E293B),
+                    child: Text(
+                      isLoggedIn ? (user['HoTen'] ?? 'U')[0].toUpperCase() : '?',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: isLoggedIn
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  user['HoTen'] ?? '',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: isLoggedIn
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user['HoTen'] ?? '',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: textColor,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(user['Email'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 13)),
-                                if (isAdmin) ...[
-                                  const SizedBox(height: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.redAccent.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: Colors.redAccent),
-                                    ),
-                                    child: const Text('QUẢN TRỊ VIÊN (ADMIN)', style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                                  )
-                                ]
-                              ],
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Bạn chưa đăng nhập', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                const SizedBox(height: 4),
-                                const Text('Đăng nhập để theo dõi đơn hàng và ưu đãi', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                              ],
-                            ),
-                    ),
-                    if (!isLoggedIn)
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00E5FF),
-                          foregroundColor: const Color(0xFF0A192F),
-                        ),
-                        onPressed: _openLoginScreen,
-                        child: const Text('Đăng nhập', style: TextStyle(fontWeight: FontWeight.bold)),
-                      )
-                  ],
-                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'ID: SM${user['Id']}',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Bạn chưa đăng nhập',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: textColor,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Đăng nhập để theo dõi đơn hàng',
+                                style: TextStyle(
+                                  color: subTextColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                  if (!isLoggedIn)
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1E293B),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _openLoginScreen,
+                      child: const Text('Đăng nhập'),
+                    )
+                ],
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
+            // KHỐI ĐƠN HÀNG CỦA TÔI
+            if (isLoggedIn) ...[
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Đơn hàng của tôi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        Text(
+                          'Đơn hàng của tôi',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: textColor,
+                          ),
+                        ),
                         GestureDetector(
                           onTap: () => _openOrderTracking(0),
-                          child: const Text('Xem tất cả >', style: TextStyle(color: Color(0xFF00E5FF), fontSize: 12, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            'Xem tất cả',
+                            style: TextStyle(
+                              color: subTextColor,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const Divider(height: 24),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -241,68 +296,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
               ),
-            ),
+              const SizedBox(height: 20),
+            ],
 
-            const SizedBox(height: 16),
-
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            // KHỐI MENU CHỨC NĂNG (Đã bỏ VIP)
+            Container(
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
               child: Column(
                 children: [
-                  if (isAdmin)
-                    ListTile(
-                      leading: const Icon(Icons.admin_panel_settings, color: Colors.redAccent),
-                      title: const Text('Trang Quản Trị Admin', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.redAccent)),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
+                  if (isAdmin) ...[
+                    _buildMenuItem(
+                      Icons.admin_panel_settings,
+                      'Trang Quản Trị Admin',
+                      () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => AdminDashboardScreen(currentUser: user!)),
+                          MaterialPageRoute(
+                            builder: (context) => AdminDashboardScreen(currentUser: user!),
+                          ),
                         );
                       },
+                      textColor: Colors.redAccent,
                     ),
-                  if (isAdmin) const Divider(height: 1),
-
-                  ListTile(
-                    leading: const Icon(Icons.confirmation_number_outlined, color: Color(0xFF00E5FF)),
-                    title: const Text('Kho Voucher / Mã giảm giá'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const VoucherScreen()),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.smart_toy, color: Colors.blueAccent),
-                    title: const Text('Trợ lý ảo AI'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      if (!isLoggedIn) {
-                        _openLoginScreen();
-                        return;
-                      }
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChatScreen(currentUser: widget.currentUser),
-                        ),
-                      );
-                    },
-                  ),
-
-                  // ➕ MỤC SẢN PHẨM YÊU THÍCH
-                  ListTile(
-                    leading: const Icon(Icons.favorite, color: Colors.redAccent),
-                    title: const Text('Sản phẩm yêu thích'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      if (!isLoggedIn) {
-                        _openLoginScreen();
-                        return;
-                      }
+                    const Divider(height: 1),
+                  ],
+                  
+                  _buildMenuItem(
+                    Icons.favorite_border,
+                    'Sản phẩm yêu thích',
+                    () {
+                      if (!isLoggedIn) return _openLoginScreen();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -312,15 +345,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
                   const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.rate_review, color: Colors.amber),
-                    title: const Text('Đánh giá của tôi'),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      if (!isLoggedIn) {
-                        _openLoginScreen();
-                        return;
-                      }
+                  
+                  _buildMenuItem(
+                    Icons.confirmation_number_outlined,
+                    'Kho Voucher / Ưu đãi',
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const VoucherScreen()),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+
+                  _buildMenuItem(
+                    Icons.smart_toy_outlined,
+                    'Trợ lý ảo AI',
+                    () {
+                      if (!isLoggedIn) return _openLoginScreen();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(currentUser: widget.currentUser),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+
+                  _buildMenuItem(
+                    Icons.rate_review_outlined,
+                    'Đánh giá của tôi',
+                    () {
+                      if (!isLoggedIn) return _openLoginScreen();
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -331,28 +388,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const Divider(height: 1),
 
-
                   SwitchListTile(
-                    secondary: Icon(
-                      widget.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                      color: const Color(0xFF00E5FF),
+                    tileColor: Colors.transparent,
+                    secondary: Icon(Icons.dark_mode_outlined, color: textColor),
+                    title: Text(
+                      'Giao diện Tối (Dark Mode)',
+                      style: TextStyle(fontSize: 14, color: textColor),
                     ),
-                    title: const Text('Giao diện Tối (Dark Mode)'),
                     value: widget.isDarkMode,
+                    activeColor: const Color(0xFF1E293B),
                     onChanged: widget.onThemeChanged,
                   ),
 
                   if (isLoggedIn) ...[
                     const Divider(height: 1),
-                    ListTile(
-                      leading: const Icon(Icons.logout, color: Colors.redAccent),
-                      title: const Text('Đăng xuất tài khoản', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                      onTap: _logout,
+                    _buildMenuItem(
+                      Icons.logout,
+                      'Đăng xuất',
+                      _logout,
+                      textColor: Colors.redAccent,
                     ),
                   ]
                 ],
               ),
             ),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -367,32 +427,75 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Icon(icon, size: 28, color: const Color(0xFF00E5FF)),
+              Icon(
+                icon,
+                size: 28,
+                color: Theme.of(context).textTheme.bodyLarge?.color,
+              ),
               if (count > 0)
                 Positioned(
-                  right: -6,
-                  top: -6,
+                  right: -8,
+                  top: -4,
                   child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
                       color: Colors.redAccent,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '$count',
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(label, style: const TextStyle(fontSize: 11)),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: Colors.grey),
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildMenuItem(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    Color textColor = const Color(0xFF1E293B),
+  }) {
+    final defaultColor = Theme.of(context).textTheme.bodyLarge?.color;
+    return ListTile(
+      tileColor: Colors.transparent,
+      leading: Icon(
+        icon,
+        color: textColor == const Color(0xFF1E293B) ? defaultColor : textColor,
+        size: 22,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14,
+          color: textColor == const Color(0xFF1E293B) ? defaultColor : textColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      trailing: const Icon(
+        Icons.arrow_forward_ios,
+        size: 14,
+        color: Colors.grey,
+      ),
+      onTap: onTap,
+    );
+  }
 }
+
 // ================= MÀN HÌNH XEM LẠI ĐÁNH GIÁ CỦA TÔI =================
 class MyReviewsScreen extends StatefulWidget {
   final Map<String, dynamic> currentUser;
@@ -414,56 +517,95 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ĐÁNH GIÁ CỦA TÔI'), centerTitle: true),
+      appBar: AppBar(
+        title: const Text(
+          'Đánh giá của tôi',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<dynamic>>(
         future: _futureMyReviews,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Bạn chưa viết đánh giá nào.', style: TextStyle(color: Colors.grey)));
+            return const Center(
+              child: Text(
+                'Bạn chưa viết đánh giá nào.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            );
           }
 
           final list = snapshot.data!;
           return ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             itemCount: list.length,
             itemBuilder: (context, index) {
               final r = list[index];
-              return Card(
+              return Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(r['HinhAnh'] ?? '', width: 50, height: 50, fit: BoxFit.cover),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            r['HinhAnh'] ?? '',
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(r['TenSanPham'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: List.generate(5, (i) => Icon(
-                                    i < r['SoSao'] ? Icons.star : Icons.star_border,
-                                    color: Colors.amber, size: 16,
-                                  )),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                r['TenSanPham'] ?? '',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: List.generate(5, (i) {
+                                  return Icon(
+                                    i < r['SoSao'] ? Icons.star : Icons.star_border,
+                                    color: Colors.amber,
+                                    size: 16,
+                                  );
+                                }),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      const Divider(height: 20),
-Text(r['BinhLuan'] ?? '', style: const TextStyle(fontSize: 14)),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 20),
+                    Text(
+                      r['BinhLuan'] ?? '',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
                 ),
               );
             },

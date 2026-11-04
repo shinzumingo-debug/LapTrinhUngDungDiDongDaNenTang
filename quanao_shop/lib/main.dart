@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'screens/home_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/profile_screen.dart';
-import 'screens/chat_screen.dart'; // <-- ĐÃ THÊM IMPORT CHAT SCREEN
+import 'screens/chat_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +17,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.light;
 
   void _toggleTheme(bool isDark) {
     setState(() {
@@ -26,91 +27,108 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryTechColor = Color(0xFF00E5FF);
-    const Color techBackgroundDark = Color(0xFF0B0E14);
-    const Color techCardDark = Color(0xFF151922);
+    const Color navyPrimary = Color(0xFF1E293B);
+    const Color pastelBg = Color(0xFFF4F7FB);
 
     return MaterialApp(
-      title: 'SHAMIKIN_SHOP',
+      title: 'SM Fashion',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.trackpad,
+        },
+      ),
       themeMode: _themeMode,
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: primaryTechColor,
-        scaffoldBackgroundColor: techBackgroundDark,
-        cardColor: techCardDark,
+      
+      // GIAO DIỆN SÁNG
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primaryColor: navyPrimary,
+        scaffoldBackgroundColor: pastelBg,
+        cardColor: Colors.white,
         useMaterial3: true,
-        colorScheme: const ColorScheme.dark(
-          primary: primaryTechColor,
-          secondary: Color(0xFF7C4DFF),
-          surface: techCardDark,
-          background: techBackgroundDark, // Lưu ý: Dart mới khuyên dùng surface thay background, nhưng giữ nguyên để không lỗi
+        colorScheme: const ColorScheme.light(
+          primary: navyPrimary,
+          surface: Colors.white,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0F131C),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          iconTheme: IconThemeData(color: primaryTechColor),
+          scrolledUnderElevation: 0,
+          iconTheme: IconThemeData(color: navyPrimary),
           titleTextStyle: TextStyle(
-            color: primaryTechColor,
+            color: navyPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w900,
-            letterSpacing: 2.0,
-            fontFamily: 'monospace',
           ),
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFF0F131C),
-          selectedItemColor: primaryTechColor,
-          unselectedItemColor: Color(0xFF6C758D),
+          backgroundColor: Colors.white,
+          selectedItemColor: navyPrimary,
+          unselectedItemColor: Color(0xFF94A3B8),
           type: BottomNavigationBarType.fixed,
+          elevation: 10,
         ),
       ),
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primaryColor: const Color(0xFF00838F),
-        scaffoldBackgroundColor: const Color(0xFFF4F7FA),
-        cardColor: Colors.white,
+
+      // GIAO DIỆN TỐI
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primaryColor: const Color(0xFF00E5FF),
+        scaffoldBackgroundColor: const Color(0xFF080B11),
+        cardColor: const Color(0xFF141A24),
         useMaterial3: true,
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF00E5FF),
+          surface: Color(0xFF141A24),
+        ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0A192F),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
+          scrolledUnderElevation: 0,
           iconTheme: IconThemeData(color: Color(0xFF00E5FF)),
           titleTextStyle: TextStyle(
             color: Color(0xFF00E5FF),
             fontSize: 18,
             fontWeight: FontWeight.w900,
-            letterSpacing: 2.0,
-            fontFamily: 'monospace',
           ),
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.white,
-selectedItemColor: Color(0xFF00838F),
-          unselectedItemColor: Color(0xFF757575),
+          backgroundColor: Color(0xFF0F131C),
+          selectedItemColor: Color(0xFF00E5FF),
+          unselectedItemColor: Color(0xFF6C758D),
           type: BottomNavigationBarType.fixed,
+          elevation: 10,
         ),
       ),
+      
       builder: (context, child) {
-        bool isDark = _themeMode == ThemeMode.dark;
+        // KHUNG ĐIỆN THOẠI BÊN NGOÀI LUÔN CỐ ĐỊNH MÀU SÁNG
         return Scaffold(
-          backgroundColor: const Color(0xFF05070A),
+          backgroundColor: const Color(0xFFE2E8F0),
           body: Center(
             child: Container(
               width: 410,
               height: 840,
               decoration: BoxDecoration(
-                color: isDark ? techBackgroundDark : const Color(0xFFF4F7FA),
+                color: const Color(0xFFF4F7FB),
                 borderRadius: BorderRadius.circular(40),
                 boxShadow: [
                   BoxShadow(
-                    color: primaryTechColor.withValues(alpha: 0.25), // Sửa theo chuẩn mới chống cảnh báo
-                    blurRadius: 25,
-                    spreadRadius: 2,
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.1),
+                    blurRadius: 30,
+                    spreadRadius: 5,
                   )
                 ],
-                border: Border.all(color: const Color(0xFF1E2638), width: 8),
+                border: Border.all(
+                  color: const Color(0xFFCBD5E1),
+                  width: 8,
+                ),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(32),
@@ -149,7 +167,6 @@ class _PhoneMockupFrameState extends State<PhoneMockupFrame> {
   void _onUserChanged(Map<String, dynamic>? user) {
     setState(() {
       currentUser = user;
-      // KHI ĐĂNG NHẬP THÀNH CÔNG -> TỰ ĐỘNG CHUYỂN VỀ TRANG CHỦ (INDEX = 0)
       if (user != null) {
         _currentIndex = 0;
       }
@@ -168,8 +185,14 @@ class _PhoneMockupFrameState extends State<PhoneMockupFrame> {
   @override
   Widget build(BuildContext context) {
     List<Widget> screens = [
-      HomeScreen(currentUser: currentUser, onUserChanged: _onUserChanged),
-      CartScreen(key: ValueKey('cart_$_currentIndex'), currentUser: currentUser),
+      HomeScreen(
+        currentUser: currentUser,
+        onUserChanged: _onUserChanged,
+      ),
+      CartScreen(
+        key: ValueKey('cart_$_currentIndex'),
+        currentUser: currentUser,
+      ),
       ProfileScreen(
         currentUser: currentUser,
         onUserChanged: _onUserChanged,
@@ -181,20 +204,18 @@ class _PhoneMockupFrameState extends State<PhoneMockupFrame> {
     bool isDark = widget.isDarkMode;
 
     return Scaffold(
-      // BỌC BODY BẰNG STACK ĐỂ CHÈN NÚT NỔI
       body: Stack(
         children: [
-          screens[_currentIndex],
+          screens[_currentIndex < screens.length ? _currentIndex : 0],
           
-          // NÚT BONG BÓNG AI (Chỉ hiển thị khi đã đăng nhập để tư vấn chính xác)
-if (currentUser != null)
+          if (currentUser != null)
             Positioned(
-              bottom: 20, 
+              bottom: 20,
               right: 20,
               child: FloatingActionButton(
                 heroTag: 'ai_chat_btn',
-                backgroundColor: const Color(0xFF00E5FF),
-                foregroundColor: Colors.black,
+                backgroundColor: isDark ? const Color(0xFF00E5FF) : const Color(0xFF1E293B),
+                foregroundColor: isDark ? Colors.black : Colors.white,
                 elevation: 8,
                 shape: const CircleBorder(),
                 onPressed: () {
@@ -215,13 +236,25 @@ if (currentUser != null)
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         backgroundColor: isDark ? const Color(0xFF0F131C) : Colors.white,
-        selectedItemColor: isDark ? const Color(0xFF00E5FF) : const Color(0xFF00838F),
-        unselectedItemColor: isDark ? const Color(0xFF6C758D) : Colors.grey.shade600,
+        selectedItemColor: isDark ? const Color(0xFF00E5FF) : const Color(0xFF1E293B),
+        unselectedItemColor: isDark ? const Color(0xFF6C758D) : const Color(0xFF94A3B8),
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.hub_outlined), activeIcon: Icon(Icons.hub), label: 'Trang chủ'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart_outlined), activeIcon: Icon(Icons.shopping_cart), label: 'Giỏ hàng'),
-          BottomNavigationBarItem(icon: Icon(Icons.fingerprint), activeIcon: Icon(Icons.fingerprint), label: 'Tài khoản'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Trang chủ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_bag_outlined),
+            activeIcon: Icon(Icons.shopping_bag),
+            label: 'Giỏ hàng',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Tài khoản',
+          ),
         ],
       ),
     );
